@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load humanize %}
+{% load extraFilter %}
+{% block title %} Giỏ hàng của bạn {% endblock %}
+
+{% block link %}
+<link href="{% static 'css/cart.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<section class="h-100 h-custom" style="background-color: transparent;">
+    <div class="container py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12">
+          <div class="card card-registration card-registration-2" style="border-radius: 15px;">
+            <div class="card-body p-0">
+              <div class="row g-0">
+                <div class="col-lg-8">
+                  <div class="p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                      <h1 class="fw-bold mb-0 text-black">Giỏ hàng của {{ user.first_name }}</h1>
+                      <h6 class="mb-0 text-muted"> <span id="cart_qty">{{ cartqty }}</span> món </h6>
+                    </div>
+                    <div class="h-100 p-3" style="max-height: 65vh;overflow: scroll;">
+                    {% for item in cartitems %}
+                    {% if item.status == "CH"%}
+                    <hr class="my-4" id="hr{{item.id}}">
+                    <input type='hidden' id='status{{item.id}}' value='{{item.status}}'>
+                    <div class="row mb-4 d-flex justify-content-between align-items-center" id="cartnumber{{item.id}}" style="background:  #33ff33;" >
+                    {% else %}
+                    <hr class="my-4" id="hr{{item.id}}">
+                    <input type='hidden' id='status{{item.id}}' value='{{item.status}}'>
+                    <div class="row mb-4 d-flex justify-content-between align-items-center" id="cartnumber{{item.id}}">
+                        {% endif %}
+                      <div class="col-md-2 col-lg-2 col-xl-2" id="update-cart-status{{item.id}}">
+                        <img
+                          src="../media/{{ item.product.image }}"
+                          class="img-fluid rounded-3" alt="{{item.product.name}}">
+                      </div>
+                      <div class="col-md-3 col-lg-3 col-xl-3">
+                        <h6 class="text-muted">{{item.product.category}}</h6>
+                        <h6 class="text-black mb-0">{{item.product.name}}</h6>
+                      </div>
+                      <div class="col-md-3 col-lg-3 col-xl-2">
+                        
+  
+                        <input id="update-cart-qty{{item.id}}" min="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" name="quantity" value="{{item.quantity}}" type="number" class="form-control form-control-sm" />
+
+                          <h6 class="mb-0 text-muted" >{{item.product.price|intcomma}} VND</h6>
+                        
+                        
+                      </div>
+                      <div class="col-md-3 col-lg-2 col-xl-2">
+                        
+                            {% for key,value in carttotal.items %}
+                                {% if key == item.id %}
+                                <h6 class="mb-0" id="cartTotal{{ item.id }}" >
+                                    {{value|intcomma}}
+                                </h6>
+                                <input type='hidden' id='total{{item.id}}' value='{{value}}'>
+                                {% endif %}
+                            {% endfor %}
+                        
+                        <h6 class="mb-0 text-muted" > VND</h6>
+                      </div>
+
+                      <!-- Nút xóa -->
+                      <div class="col-md-1 col-lg-1 col-xl-1 ">
+                        <button type="button" id ="delete-cart{{ item.id }}" class=" btn btn-light"><i class="fa-solid fa-xmark"></i></button>
+                      </div>
+                      <script>
+                        $(document).on('change','#update-cart-qty{{ item.id }}', function(e){
+                            e.preventDefault();
+                            if($('#update-cart-qty{{ item.id }}').val()>=1){
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '{% url 'cart_update_qty' %}',
+                                    data:{
+                                      cart_qty: $('#update-cart-qty{{ item.id }}').val(),
+                                      cart_id: {{ item.id }},
+                                      csrfmiddlewaretoken: '{{ csrf_token }}',
+                                      action: 'post'
+                                    },
+                                    success: function(json){
+                                      console.log(json);
+                                      var price = {{item.product.price}}
+                                      var total = Number(json.qty) * price;
+                                      document.getElementById("total{{ item.id }}").value = total;
+                                      document.getElementById("cartTotal{{ item.id }}").textContent = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                      cart_status = document.getElementById("status{{item.id}}").value;
+                                      if(cart_status=="CH"){
+                                        var adc = {{adc}}
+                                        var grandtotal = parseInt(document.getElementById("grandtotal1").value);
+                                        var change = parseInt(json.change);
+                                        console.log(grandtotal);
+                                        console.log(change);
+                                        grandtotal = grandtotal + parseInt(change*price*adc);
+                                        document.getElementById("grandtotal").textContent = grandtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                        document.getElementById("grandtotal1").value = grandtotal;
+                                      }
+                                      
+                                    },
+                              
+                                    error: function(xhr, errmsg, err){
+                              
+                                    }
+                              
+                                  });
+
+                            }
+                            else if($('#update-cart-qty{{ item.id }}').val() <1 ){
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '{% url 'cart_update_qty' %}',
+                                    data:{
+                                      cart_qty: 1,
+                                      cart_id: {{ item.id }},
+                                      csrfmiddlewaretoken: '{{ csrf_token }}',
+                                      action: 'post'
+                                    },
+                                    success: function(json){
+                                      console.log(json);
+                                      var price = {{item.product.price}}
+                                      var total = Number(json.qty) * price;
+                                      alert("Số lượng nhỏ nhất là 1. Hãy chọn x nếu bạn muốn xóa món đã chọn.");
+                                      document.getElementById("cartTotal{{ item.id }}").textContent = total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                      document.getElementById("update-cart-qty{{item.id}}").value = 1;
+                                      cart_status = document.getElementById("status{{item.id}}").value;
+                                      if(cart_status=="CH"){
+                                        var adc = {{adc}}
+                                        var grandtotal = parseInt(document.getElementById("grandtotal1").value);
+                                        var change = parseInt(json.change);
+                                        console.log(grandtotal);
+                                        console.log(change);
+                                        grandtotal = grandtotal + parseInt(change*price*adc);
+                                        document.getElementById("grandtotal").textContent = grandtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                        document.getElementById("grandtotal1").value = grandtotal;
+                                      }
+                                                                            
+                                    },
+                              
+                                    error: function(xhr, errmsg, err){
+                              
+                                    }
+                              
+                                  });
+
+                            }
+                            
+                          })
+                        $(document).on('click','#delete-cart{{ item.id }}', function(e){
+                        e.preventDefault();
+                        
+                            $.ajax({
+                                type: 'POST',
+                                url: '{% url 'cart_delete' %}',
+                                data:{
+                                    cart_id: {{item.id}},                                            
+                                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                                    action: 'post'
+                                },
+                                success: function(json){
+                                    console.log(json);
+                                    var status = document.getElementById("status{{item.id}}").value;                                    
+                                    if(status == "AD"){
+                                        alert("Bạn đã xóa món {{item.product.name}}");
+                                        document.getElementById("cart_quantity").textContent = json.qty;
+                                        document.getElementById("cart_qty").textContent = json.qty;                                        
+                                        $("#hr{{item.id}}").remove();
+                                        $("#cartnumber{{item.id}}").remove();
+                                    }
+                                    else if(status =="CH"){
+                                        alert("Bạn đã xóa món {{item.product.name}}");
+                                        var adc = {{adc}}
+                                        var qty = {{item.quantity}};
+                                        var price = {{item.product.price}};
+                                        var total = parseInt(qty*price*adc);
+                                        var grandtotal = document.getElementById("grandtotal1").value - total;
+                                        var currentCartChosen = parseInt(document.getElementById("cartChosen1").value) -1;
+                                        document.getElementById("grandtotal").textContent = grandtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                        document.getElementById("grandtotal1").value = grandtotal;
+                                        document.getElementById("cart_quantity").textContent = json.qty;
+                                        document.getElementById("cart_qty").textContent = json.qty;
+                                        document.getElementById("cartChosen").textContent = currentCartChosen;
+                                        document.getElementById("cartChosen1").value = currentCartChosen;
+                                        if(currentCartChosen == 0){
+                                          document.getElementById("order").disabled = true;
+                                        }
+                                        $("#hr{{item.id}}").remove();
+                                        $("#cartnumber{{item.id}}").remove();
+
+                                    }
+                                    
+                                },
+                            
+                                error: function(xhr, errmsg, err){
+                            
+                                }
+                            
+                                });                            
+                            })
+
+                        $(document).on('click','#update-cart-status{{ item.id }}', function(e){
+                            e.preventDefault();                            
+                                $.ajax({
+                                    type: 'POST',
+                                    url: '{% url 'cart_update_status' %}',
+                                    data:{
+                                        cart_id: {{item.id}}, 
+                                        cart_status: document.getElementById("status{{item.id}}").value,                                           
+                                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                                        action: 'post'
+                                    },
+                                    success: function(json){
+                                        console.log(json);
+                                        if(json.status == "CH"){      
+                                            document.getElementById("status{{item.id}}").value = "CH";    
+                                            var adc = {{adc}}                                  
+                                            $("#cartnumber{{item.id}}").css("background-color", "#33ff33");                                             
+                                            var total = parseInt($('#total{{item.id}}').val());
+                                            var grandtotal = parseInt($('#grandtotal1').val()) + parseInt(total*adc);
+                                            console.log($('#grandtotal1').val());
+                                            document.getElementById("grandtotal").textContent = grandtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                            document.getElementById("grandtotal1").value = grandtotal;
+                                            var currentCartChosen = parseInt(document.getElementById("cartChosen1").value)+1;
+                                            document.getElementById("cartChosen").textContent = currentCartChosen;
+                                            document.getElementById("cartChosen1").value = currentCartChosen;                                            
+                                            document.getElementById("order").disabled = false;
+                                            
+                                        }
+                                        else if(json.status =="AD"){
+                                            document.getElementById("status{{item.id}}").value = "AD";
+                                            var adc = {{adc}}                                            
+                                            $("#cartnumber{{item.id}}").css("background-color", "white"); 
+                                            var total = parseInt($('#total{{item.id}}').val());
+                                            var grandtotal = parseInt($('#grandtotal1').val()) - parseInt(total*adc);
+                                            console.log($('#grandtotal1').val());
+                                            document.getElementById("grandtotal").textContent = grandtotal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") ;
+                                            document.getElementById("grandtotal1").value = grandtotal;
+                                            var currentCartChosen = parseInt(document.getElementById("cartChosen1").value)-1;
+                                            document.getElementById("cartChosen").textContent = currentCartChosen;
+                                            document.getElementById("cartChosen1").value = currentCartChosen;
+                                            if(currentCartChosen == 0){
+                                              document.getElementById("order").disabled = true;
+                                            }
+                                        }
+                                        
+                                    },
+                                
+                                    error: function(xhr, errmsg, err){
+                                
+                                    }
+                                
+                                    });                            
+                                })
+
+                                
+                        
+                        </script>
+                    </div>
+
+                    
+                     {% endfor %}
+
+                    <hr class="my-4">
+                </div>
+  
+                    <div class="pt-5">
+                      <h6 class="mb-0"><a href="{% url 'homepage' %}" class="text-body"><i
+                            class="fas fa-long-arrow-alt-left me-2"></i>Quay lại trang chủ</a></h6>
+                            
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Order detail -->
+                <div class="col-lg-4 bg-grey">
+                  <div class="p-3">
+                    <h3 class="fw-bold mb-3 mt-2 pt-1">Đơn hàng </h3>
+                    <hr class="my-4">
+  
+                    <div class="d-flex justify-content-between">
+                      <h5 class="text-uppercase">Chọn <span id="cartChosen"> {{cartChosen}} </span> món</h5>
+                      <input type="hidden" id="cartChosen1"  value="{{cartChosen}}">
+                      <h5><span id="grandtotal"  > {{grandtotal|intcomma}}</span> VND</h5>
+                      <input type="hidden" id="grandtotal1"  value="{{grandtotal}}">
+                      
+                    </div>
+                    <h6 class="mb-4 text-muted"> Giảm giá {{discount}} </h6>
+                    <!-- Order form-->
+                    <form action="{% url 'create_order' %}" method="POST">
+                      {% csrf_token %}
+                      <div class="mb-1">
+                        <label for="username" class="form-label">Người đặt</label>
+                        <input type="text" class="form-control" name="username" value = "{{user.first_name}}" required />    
+                        <div class="invalid-feedback">
+                          Không được để trống
+                      </div>            
+                      </div>
+                      <div class="mb-1">
+                        <label for="receiver" class="form-label">Người nhận</label>
+                        <input type="text" class="form-control" name="receiver"  value = "{{user.first_name}}" required />
+                        <div class="invalid-feedback">
+                          Không được để trống
+                      </div>                
+                      </div>
+                      <div class="mb-1">
+                        <label for="address" class="form-label">Địa chỉ giao hàng</label>
+                        <select class="form-select form-select-md mb-3" id ="address" name="address">
+                         
+                          {% for address in addresses %}
+                          {% if address.default %}
+                          <option value="{{address.address}}" selected>{{address.address}}</option>
+                          {% else %}
+                          <option value="{{address.address}}">{{address.address}}</option>
+                          {% endif %}
+                          {% endfor %}
+                          <option value="Lấy tại cửa hàng">Lấy tại cửa hàng</option>
+                        </select>
+                        <span class="text-muted"><a href="{% url 'profile'%}">Thêm địa chỉ của bạn tại đây</a></span>
+                      </div>
+                      <div class="mb-1">
+                        <label for="phonenum" class="form-label">Số điện thoại người nhận</label>
+                        <input type="text" class="form-control" name="phonenum"  value = "{{profile.phonenum}}"/>                
+                      </div>
+                      <div class="mb-1">
+                        <div class="form-floating">
+                          <textarea class="form-control" placeholder="Ghi chú cho đơn của bạn" name="ordernote" value="" style="height: 10vh"></textarea>
+                          <label for="note">Ghi chú</label>
+                        </div>     
+                      </div>
+                      
+                      
+                      {% if cartChosen %}
+                      <button type="submit" class="btn btn-primary mt-3" id="order">Chốt đơn</button>
+                      {% else %}
+                      <button type="submit" class="btn btn-primary mt-3" id="order" disabled=true >Chốt đơn</button><br/>
+                      <span class="text-muted">Click chọn hình ảnh món bạn muốn đặt ngay</span>
+                      {% endif %}
+                    </form>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+{% endblock %}

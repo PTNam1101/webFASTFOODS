@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% load humanize %}
+{% load extraFilter %}
+{% block title %}
+{{categoryname.name}}
+{% endblock %}
+
+{% block link %}
+<link href="{% static 'css/imgstyle.css' %}" rel="stylesheet">
+ 
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+      <div class="container-md p-4">
+      <h1 class="text-center text-bg-light opacity-75 mx-auto p-2 " 
+      style="width: 50vw;">Thực đơn {{category.name}}</h1>
+    </div>
+      <div class="container text-center">
+      <div class="row row-cols-4">
+      {% for product in productC %}
+      <div class="col">
+          <div class="card mb-3 text-center">
+            <img src="../media/{{product.image}}" class="rounded-3 img-top" alt="{{product.name}}">
+            <div class="card-body">
+              <h5 class="card-title">{{product.name}}</h5>
+              <p class="card-text">{{product.price|intcomma}} VND</p>
+              <p class="card-text">Đã bán {{product.ordered_times}}</p>
+              <button type="button" value="{{ product.id }}" id ="add-cart{{product.id}}" class="btn btn-primary">Thêm vào giỏ</button>
+            </div>
+          </div>
+        </div>
+        <script>
+          $(document).on('click','#add-cart{{ product.id }}', function(e){
+            e.preventDefault();
+            $.ajax({
+              type: 'POST',
+              url: '{% url 'cart_add' %}',
+              data:{
+                product_id: $('#add-cart{{ product.id }}').val(),
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+                action: 'post'
+              },
+              success: function(json){
+                console.log(json);
+                document.getElementById("cart_quantity").textContent = json.qty;
+              },
+        
+              error: function(xhr, errmsg, err){
+        
+              }
+        
+            });
+          })
+        </script>
+      {% endfor %}
+      </div>
+      </div>
+
+</div>
+<script>
+  $(document).on('click','#add-cart', function(e){
+    e.preventDefault();
+    $.ajax({
+      type: 'POST',
+      url: '{% url 'cart_add' %}',
+      data:{
+        product_id: $('#add-cart').val(),
+        csrfmiddlewaretoken: '{{ csrf_token }}',
+        action: 'post'
+      },
+      success: function(json){
+        console.log(json);
+        document.getElementById("cart_quantity").textContent = json.quantity;
+      },
+
+      error: function(xhr, errmsg, err){
+
+      }
+
+    });
+  })
+</script>
+{% endblock %}

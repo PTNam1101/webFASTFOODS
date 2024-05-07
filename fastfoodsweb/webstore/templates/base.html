@@ -1,0 +1,141 @@
+{% load static %}
+
+{% load humanize %}
+{% load extraFilter %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock %}</title>
+        <!-- Required meta tags -->
+       <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS v5.2.1 -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet"
+         integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+         <link rel="apple-touch-icon" sizes="57x57" href="{% static 'assets/apple-icon-57x57.png' %}">
+         <link rel="apple-touch-icon" sizes="60x60" href="{% static 'assets/apple-icon-60x60.png' %}">
+         <link rel="apple-touch-icon" sizes="72x72" href="{% static 'assets/apple-icon-72x72.png' %}">
+         <link rel="apple-touch-icon" sizes="76x76" href="{% static 'assets/apple-icon-76x76.png'%}">
+         <link rel="apple-touch-icon" sizes="114x114" href="{% static 'assets/apple-icon-114x114.png' %}">
+         <link rel="apple-touch-icon" sizes="120x120" href="{% static 'assets/apple-icon-120x120.png' %}">
+         <link rel="apple-touch-icon" sizes="144x144" href="{% static 'assets/apple-icon-144x144.png' %}">
+         <link rel="apple-touch-icon" sizes="152x152" href="{% static 'assets/apple-icon-152x152.png' %}">
+         <link rel="apple-touch-icon" sizes="180x180" href="{% static 'assets/apple-icon-180x180.png' %}">
+         <link rel="icon" type="image/png" sizes="192x192"  href="{% static 'assets/android-icon-192x192.png' %}">
+         <link rel="icon" type="image/png" sizes="32x32" href="{% static 'assets/favicon-32x32.png' %}">
+         <link rel="icon" type="image/png" sizes="96x96" href="{% static 'assets/favicon-96x96.png' %}">
+         <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/favicon-16x16.png' %}">
+         <link rel="manifest" href="{% static 'assets/manifest.json' %}">
+         <meta name="msapplication-TileColor" content="#ffffff">
+         <meta name="msapplication-TileImage" content="{% static 'assets/ms-icon-144x144.png' %}">
+         <meta name="theme-color" content="#ffffff">
+         <style>
+          body  {
+            background-image: url("https://images.unsplash.com/photo-1517433367423-c7e5b0f35086?auto=format&fit=crop&q=80&w=1901&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+          }
+          </style>
+        {% block link %}{% endblock %}
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+        <script src="https://kit.fontawesome.com/71240cba14.js" crossorigin="anonymous"></script>
+      </head>
+<body>
+  <header class="pb-2">
+    <!-- place navbar here -->
+  <nav class="navbar navbar-expand-sm navbar-light fixed-top" style="background-color: #e3f2fd;">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'homepage' %}">FastFoods</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mynavbar">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mynavbar">
+        <ul class="navbar-nav me-auto">
+        <!-- dropdown thực đơn -->
+          <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" 
+          role="button" data-bs-toggle="dropdown" 
+          aria-expanded="false">
+            Thực đơn
+          </a>
+          <!-- danh sách các loại món -->
+          <ul class="dropdown-menu" style="width:fit-content">
+            {% for category in categories %}
+            <li ><a class="dropdown-item" href="{% url 'allInCategory' category.id %}" >{{category.name}}</a></li>
+            {% endfor %}
+            </ul>
+          </li>
+        
+        <!-- menu khi đăng nhập -->
+          {% if user.is_authenticated %}
+          
+          <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" 
+          role="button" data-bs-toggle="dropdown" 
+          aria-expanded="false">
+            Tài khoản
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'profile'%}">Thông tin tài khoản {{user.first_name}}</a></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Đăng xuất</a></li>
+          </ul>
+          </li>
+           <!-- Giỏ hàng -->
+           <li>
+            <form class="d-flex" >
+              <a href="{% url 'cart_inventory'%}" class="btn btn-outline-primary" ><i class="bi-cart-fill me-1"></i>
+                Giỏ hàng
+                <span class="badge bg-primary ms-1 rounded-pill" id="cart_quantity">{{ cartqty }}</span>
+              </a>
+          </form>
+        </li>
+          {% else %}
+          <!-- menu chưa đăng nhập -->
+            <li><a class="nav-link" href="{% url 'login' %}">Đăng nhập</a></li>
+            <li><a class="nav-link" href="{% url 'register' %}">Đăng ký</a></li>
+          {% endif %}
+          <li><a class="nav-link" href="{% url 'about' %}">About FASTFOODS</a></li>
+        </ul>
+           <!-- form tìm kiếm -->
+        <form class="d-flex" method="POST" action ="{% url 'searched' %}">
+        {% csrf_token %}
+
+          <input class="form-control me-2" type="text" placeholder="Tìm món" name="search">
+          <button class="btn btn-primary" type="submit" ><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+          </svg></button>
+        </form>
+
+      </div>
+    </div>
+  </nav>
+  </header>
+
+  <main>
+  <div class = "container-fluid pt-5">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="mx-auto alert alert-warning alert-dismissible fade show" role="alert" style="width: fit-content;">
+            {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+  </main>
+  {% include 'footer.html' %}
+  <!-- Bootstrap JavaScript Libraries -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous">
+  </script>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.min.js"
+    integrity="sha384-7VPbUDkoPSGFnVtYi0QogXtr74QeVeeIs99Qfg5YCF+TidwNdjvaKZX19NZ/e6oz" crossorigin="anonymous">
+  </script>
+ 
+    
+  </body>
+</html>

@@ -1,0 +1,409 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% load humanize %}
+{% load extraFilter %}
+{% block title %}
+Trang chu
+{% endblock %}
+
+{% block link %}
+<link href="{% static 'css/caroucel.css' %}" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <div class="container-md p-4">
+    <h1 class="text-center text-bg-light opacity-75 mx-auto p-2 " style="width: 50vw;">Chào mừng đến với FASTFOODS</h1>
+  </div>
+{% if user.is_authenticated %}
+<!-- Carousel -->
+<!-- combos -->
+{% if combos %}
+  <div id="caroucelControlCombos" class="carousel">
+    <h2 class="text-center text-bg-light p-2 opacity-75 mx-auto" 
+    style="width: 50vw;">Combos dành cho bạn</h2>
+    <div class="carousel-inner">
+        {% for product in combos %}
+            {% if forloop.first %}
+            <div class="carousel-item active">
+              <div class="card text-center">
+                <img src="media/{{ product.image }}" class="rounded-3 img-top"  alt="{{product.name}}">
+                <div class="card-body">
+                  <h5 class="card-title">{{product.name}}</h5>
+                  <p class="card-text">{{product.price|intcomma}} VND</p>
+                  <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                  <button type="button" id ="add-cart{{ product.id }}" class="btn btn-primary">Thêm vào giỏ</button>
+                </div>
+              </div>
+            </div>
+            <script>
+              $(document).on('click','#add-cart{{ product.id }}', function(e){
+                e.preventDefault();
+                $.ajax({
+                  type: 'POST',
+                  url: '{% url 'cart_add' %}',
+                  data:{
+                    product_id:{{product.id}},
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                  },
+                  success: function(json){
+                    console.log(json);
+                    document.getElementById("cart_quantity").textContent = json.qty;
+                  },
+            
+                  error: function(xhr, errmsg, err){
+            
+                  }
+            
+                });
+              })
+            </script>
+            {% else %}
+            <div class="carousel-item">
+              <div class="card text-center">
+                <img src="media/{{ product.image }}" class="rounded-3 img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                  <h5 class="card-title">{{product.name}}</h5>
+                  <p class="card-text">{{product.price|intcomma}} VND</p>
+                  <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                  <button type="button" id ="add-cart{{ product.id }}" class="btn btn-primary">Thêm vào giỏ</button>
+                </div>
+              </div>
+            </div>
+            <script>
+              $(document).on('click','#add-cart{{ product.id }}', function(e){
+                e.preventDefault();
+                $.ajax({
+                  type: 'POST',
+                  url: '{% url 'cart_add' %}',
+                  data:{
+                    product_id: {{product.id}},
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                  },
+                  success: function(json){
+                    console.log(json);
+                    document.getElementById("cart_quantity").textContent = json.qty;
+                  },
+            
+                  error: function(xhr, errmsg, err){
+            
+                  }
+            
+                });
+              })
+            </script>
+            {% endif%}
+            
+        {% endfor %}
+      </div>
+      <a class="carousel-control-prev w-aut" href="#caroucelControlCombos" role="button" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </a>
+      <a class="carousel-control-next w-aut" href="#caroucelControlCombos" role="button" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </a>
+    </div>
+    <hr class="border border-2 opacity-75">
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        let multipleCardCarousel = document.querySelector("#caroucelControlCombos");
+  
+  
+        if (window.matchMedia("(min-width: 768px)").matches) {
+          let carousel = new bootstrap.Carousel(multipleCardCarousel, {
+            interval: false, // Disable automatic sliding
+            wrap: false, // Prevent wrapping at the end
+          });
+  
+  
+          let carouselWidth = document.querySelector(".carousel-inner").scrollWidth;
+          let cardWidth = document.querySelector(".carousel-item").offsetWidth;
+          let scrollPosition = 0;
+  
+  
+          document.querySelector("#caroucelControlCombos .carousel-control-next").addEventListener("click", function () {
+            if (scrollPosition < carouselWidth - cardWidth * 4) {
+              scrollPosition += cardWidth;
+              document.querySelector("#caroucelControlCombos .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+            }
+          });
+  
+  
+          document.querySelector("#caroucelControlCombos .carousel-control-prev").addEventListener("click", function () {
+            if (scrollPosition > 0) {
+              scrollPosition -= cardWidth;
+              document.querySelector("#caroucelControlCombos .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+            }
+          });
+        } else {
+          multipleCardCarousel.classList.add("slide");
+        }
+      });
+  
+    </script>
+{% endif %}
+
+<!-- normal dishes -->
+  {% for cate in categories %}
+  <div id="caroucelControl{{cate.id}}" class="carousel">
+    <h2 class="text-center text-bg-light p-2 opacity-75 mx-auto" 
+    style="width: 50vw;">{{cate.name}}</h2>
+    <div class="carousel-inner">
+        {% for product in products|filterC:cate.id %}
+            {% if forloop.first %}
+            <div class="carousel-item active">
+              <div class="card text-center">
+                <img src="media/{{ product.image }}" class="rounded-3 img-top"  alt="{{product.name}}">
+                <div class="card-body">
+                  <h5 class="card-title">{{product.name}}</h5>
+                  <p class="card-text">{{product.price|intcomma}} VND</p>
+                  <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                  <button type="button" id ="add-cart{{ product.id }}" class="btn btn-primary">Thêm vào giỏ</button>
+                </div>
+              </div>
+            </div>
+            <script>
+              $(document).on('click','#add-cart{{ product.id }}', function(e){
+                e.preventDefault();
+                $.ajax({
+                  type: 'POST',
+                  url: '{% url 'cart_add' %}',
+                  data:{
+                    product_id:{{product.id}},
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                  },
+                  success: function(json){
+                    console.log(json);
+                    document.getElementById("cart_quantity").textContent = json.qty;
+                  },
+            
+                  error: function(xhr, errmsg, err){
+            
+                  }
+            
+                });
+              })
+            </script>
+            {% else %}
+            <div class="carousel-item">
+              <div class="card text-center">
+                <img src="media/{{ product.image }}" class="rounded-3 img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                  <h5 class="card-title">{{product.name}}</h5>
+                  <p class="card-text">{{product.price|intcomma}} VND</p>
+                  <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                  <button type="button" id ="add-cart{{ product.id }}" class="btn btn-primary">Thêm vào giỏ</button>
+                </div>
+              </div>
+            </div>
+            <script>
+              $(document).on('click','#add-cart{{ product.id }}', function(e){
+                e.preventDefault();
+                $.ajax({
+                  type: 'POST',
+                  url: '{% url 'cart_add' %}',
+                  data:{
+                    product_id: {{product.id}},
+                    csrfmiddlewaretoken: '{{ csrf_token }}',
+                    action: 'post'
+                  },
+                  success: function(json){
+                    console.log(json);
+                    document.getElementById("cart_quantity").textContent = json.qty;
+                  },
+            
+                  error: function(xhr, errmsg, err){
+            
+                  }
+            
+                });
+              })
+            </script>
+            {% endif%}
+            
+        {% endfor %}
+    </div>
+    <a class="carousel-control-prev w-aut" href="#caroucelControl{{cate.id}}" role="button" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+    </a>
+    <a class="carousel-control-next w-aut" href="#caroucelControl{{cate.id}}" role="button" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+    </a>
+  </div>
+  <hr class="border border-2 opacity-75">
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      let multipleCardCarousel = document.querySelector("#caroucelControl{{cate.id}}");
+
+
+      if (window.matchMedia("(min-width: 768px)").matches) {
+        let carousel = new bootstrap.Carousel(multipleCardCarousel, {
+          interval: false, // Disable automatic sliding
+          wrap: false, // Prevent wrapping at the end
+        });
+
+
+        let carouselWidth = document.querySelector(".carousel-inner").scrollWidth;
+        let cardWidth = document.querySelector(".carousel-item").offsetWidth;
+        let scrollPosition = 0;
+
+
+        document.querySelector("#caroucelControl{{cate.id}} .carousel-control-next").addEventListener("click", function () {
+          if (scrollPosition < carouselWidth - cardWidth * 4) {
+            scrollPosition += cardWidth;
+            document.querySelector("#caroucelControl{{cate.id}} .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+          }
+        });
+
+
+        document.querySelector("#caroucelControl{{cate.id}} .carousel-control-prev").addEventListener("click", function () {
+          if (scrollPosition > 0) {
+            scrollPosition -= cardWidth;
+            document.querySelector("#caroucelControl{{cate.id}} .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+          }
+        });
+      } else {
+        multipleCardCarousel.classList.add("slide");
+      }
+    });
+
+  </script>
+  
+  {% endfor %}
+<!-- Nguoi dung chua dang nhap-->
+{% else %}
+<!-- normal dishes -->
+{% for cate in categories %}
+<div id="caroucelControl{{cate.id}}" class="carousel">
+  <h2 class="text-center text-bg-light p-2 opacity-75 mx-auto" 
+  style="width: 50vw;">{{cate.name}}</h2>
+  <div class="carousel-inner">
+      {% for product in products|filterC:cate.id %}
+          {% if forloop.first %}
+          <div class="carousel-item active">
+            <div class="card text-center">
+              <img src="media/{{ product.image }}" class="rounded-3 img-top"  alt="{{product.name}}">
+              <div class="card-body">
+                <h5 class="card-title">{{product.name}}</h5>
+                <p class="card-text">{{product.price|intcomma}} VND</p>
+                <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal{{product.id}}">
+                  Thêm vào giỏ
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal{{product.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Hãy đăng nhập để sử dụng giỏ hàng</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <a type="button" class="btn btn-primary" href = "{% url 'login'%}">Đăng nhập</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+          {% else %}
+          <div class="carousel-item">
+            <div class="card text-center">
+              <img src="media/{{ product.image }}" class="rounded-3 img-top" alt="{{ product.name }}">
+              <div class="card-body">
+                <h5 class="card-title">{{product.name}}</h5>
+                <p class="card-text">{{product.price|intcomma}} VND</p>
+                <p class="card-text">Đã bán {{product.ordered_times}}</p>
+                <!-- Button trigger modal -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal{{product.id}}">
+                  Thêm vào giỏ
+                </button>
+
+                <!-- Modal -->
+                <div class="modal fade" id="exampleModal{{product.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Hãy đăng nhập để sử dụng giỏ hàng</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                        <a type="button" class="btn btn-primary" href = "{% url 'login'%}">Đăng nhập</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+          
+          {% endif%}
+          
+      {% endfor %}
+  </div>
+  <a class="carousel-control-prev w-aut" href="#caroucelControl{{cate.id}}" role="button" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+  </a>
+  <a class="carousel-control-next w-aut" href="#caroucelControl{{cate.id}}" role="button" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+  </a>
+</div>
+<hr class="border border-2 opacity-75">
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    let multipleCardCarousel = document.querySelector("#caroucelControl{{cate.id}}");
+
+
+    if (window.matchMedia("(min-width: 768px)").matches) {
+      let carousel = new bootstrap.Carousel(multipleCardCarousel, {
+        interval: false, // Disable automatic sliding
+        wrap: false, // Prevent wrapping at the end
+      });
+
+
+      let carouselWidth = document.querySelector(".carousel-inner").scrollWidth;
+      let cardWidth = document.querySelector(".carousel-item").offsetWidth;
+      let scrollPosition = 0;
+
+
+      document.querySelector("#caroucelControl{{cate.id}} .carousel-control-next").addEventListener("click", function () {
+        if (scrollPosition < carouselWidth - cardWidth * 4) {
+          scrollPosition += cardWidth;
+          document.querySelector("#caroucelControl{{cate.id}} .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+        }
+      });
+
+
+      document.querySelector("#caroucelControl{{cate.id}} .carousel-control-prev").addEventListener("click", function () {
+        if (scrollPosition > 0) {
+          scrollPosition -= cardWidth;
+          document.querySelector("#caroucelControl{{cate.id}} .carousel-inner").scroll({ left: scrollPosition, behavior: 'smooth' });
+        }
+      });
+    } else {
+      multipleCardCarousel.classList.add("slide");
+    }
+  });
+
+</script>
+
+{% endfor %}
+{% endif %}
+</div>
+
+<script src="{% static 'js/caroucel.js' %}"></script>
+
+{% endblock %}

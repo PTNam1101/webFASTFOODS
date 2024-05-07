@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load humanize %}
+{% load extraFilter %}
+{% block title %} Giỏ hàng của bạn {% endblock %}
+
+{% block link %}
+<link href="{% static 'css/cart.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<section class="h-100 h-custom" style="background-color: transparent;">
+    <div class="container py-5 h-100">
+      <div class="row d-flex justify-content-center align-items-center h-100">
+        <div class="col-12">
+          <div class="card card-registration card-registration-2" style="border-radius: 15px;">
+            <div class="card-body p-0">
+              <div class="row g-0">
+                <div class="col-lg-8">
+                  <div class="p-5">
+                    <div class="d-flex justify-content-between align-items-center mb-5">
+                      <h1 class="fw-bold mb-0 text-black">Đơn hàng của {{ user.first_name }}</h1>
+                      <h6 class="mb-0 text-muted"> <span id="cart_qty">{{ cartcount }}</span> món </h6>
+                    </div>
+                    <div class="h-100 p-3" style="max-height: 65vh;overflow: scroll;">
+                    {% for item in cartitems %}
+                   
+                    <hr class="my-4">
+                    
+                    <div class="row mb-4 d-flex justify-content-between align-items-center">
+                      <div class="col-md-2 col-lg-2 col-xl-2">
+                        <img
+                          src="../../media/{{ item.product.image }}"
+                          class="img-fluid rounded-3" alt="{{item.product.name}}">
+                      </div>
+                      <div class="col-md-3 col-lg-3 col-xl-3">
+                        <h6 class="text-muted">{{item.product.category}}</h6>
+                        <h6 class="text-black mb-0">{{item.product.name}}</h6>
+                      </div>
+                      <div class="col-md-3 col-lg-3 col-xl-2">
+                        
+  
+                        <input min="1" onkeypress="return event.charCode >= 48 && event.charCode <= 57" name="quantity" value="{{item.quantity}}" type="number" class="form-control form-control-sm" disable/>
+
+                          <h6 class="mb-0 text-muted" >{{item.product.price|intcomma}} VND</h6>
+                        
+                        
+                      </div>
+                      <div class="col-md-3 col-lg-2 col-xl-2">
+                        
+                            {% for key,value in OcartTotal.items %}
+                                {% if key == item.id %}
+                                <h6 class="mb-0">
+                                    {{value|intcomma}}
+                                </h6>
+                
+                                {% endif %}
+                            {% endfor %}
+                        
+                        <h6 class="mb-0 text-muted" > VND</h6>
+                      </div>
+
+                      
+                    </div>
+
+                    
+                     {% endfor %}
+
+                    <hr class="my-4">
+                </div>
+  
+                    <div class="pt-5">
+                      <h6 class="mb-0"><a href="{% url 'profile' %}" class="text-body"><i
+                            class="fas fa-long-arrow-alt-left me-2"></i>Quay lại</a></h6>
+                            
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Order detail -->
+                <div class="col-lg-4 bg-grey">
+                  <div class="p-3">
+                    <h3 class="fw-bold mb-3 mt-2 pt-1">Chi tiết đơn hàng </h3>
+                    {% if order.status == "CE" %}
+                    <h5 style="background: #ffff66;" > Chờ xác nhận </h5>
+                    
+                    {% elif order.status == "PR"  %}
+                    <h5 style="background: #66ff66;" > Đang chuẩn bị </h5>
+           
+                    {% elif order.status == "DE"  %}
+                    <h5 style="background: #33ccff;" > Đang giao </h5>
+                    
+                    {% elif order.status == "DR"  %}
+                    <h5 style="background: #6699ff;" > Đã giao</h5>
+                   
+                    {% else %}
+                    <h5 style="background: #ff9999;" > Đã hủy </h5>
+                    
+                    {% endif %}
+                    
+                    <hr class="my-4">
+  
+                    <div class="d-flex justify-content-between">
+                      <h5> Tổng: <span> {{order.total|intcomma}}</span> VND</h5>
+                                            
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <h5> Đặt lúc: {{order.orderedTime}}</h5>
+                                              
+                      </div>
+                    
+                    
+                      <div class="mb-1">
+                        <label for="username" class="form-label">Người đặt</label>
+                        <input type="text" class="form-control" name="username" value = "{{order.customer}}" disabled />    
+                                   
+                      </div>
+                      <div class="mb-1">
+                        <label for="receiver" class="form-label">Người nhận</label>
+                        <input type="text" class="form-control" name="receiver"  value = "{{order.receiver}}" disabled />
+                                       
+                      </div>
+                      <div class="mb-1">
+                        <label for="address" class="form-label">Địa chỉ giao hàng</label>
+                        <select class="form-select form-select-md mb-3" name = "address">
+                            <option selected>{{order.address}}</option>
+                         
+                        </select>
+                        
+                      </div>
+                      <div class="mb-1">
+                        <label for="phonenum" class="form-label">Số điện thoại người nhận</label>
+                        <input type="text" class="form-control" name="phonenum"  value = "{{order.phone}}" disabled/>                
+                      </div>
+                      <div class="mb-1">
+                        <div class="form-floating">
+                          <textarea class="form-control" placeholder="Ghi chú cho đơn của bạn" name="ordernote" value="" style="height: 10vh">{{order.note}}</textarea>
+                          <label for="ordernote">Ghi chú</label>
+                        </div>     
+                      </div>
+                      {% if order.status != "DR" and order.status != "CA" %}
+                      <div class="mb-1">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                            Hủy dơn hàng
+                          </button>
+                          
+                          <!-- Modal -->
+                          <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                              <div class="modal-content">
+                                <div class="modal-header">
+                                  <h1 class="modal-title fs-5" id="exampleModalLabel">Xác nhận hủy đơn hàng</h1>
+                                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                  Đơn hàng đang trong quá trình {{status}} nếu hủy đơn bạn sẽ bị trừ {{minuspoint}} còn lại {{resultrating}}. Bạn chắc chắn cần hủy đơn chứ.
+                                </div>
+                                <div class="modal-footer">
+                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Quay lại</button>
+                                  <a type="button" class="btn btn-primary" href="{% url 'order_cancel' order.id %}"> Xác nhận hủy Đơn</a>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        {% endif %}
+                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+{% endblock %}
